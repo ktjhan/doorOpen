@@ -10,27 +10,41 @@ const SearchBar: React.FC = () => {
     console.log((e.target as HTMLElement).dataset.tag);
     console.log((e.target as HTMLElement).dataset.summary);
   };
-  
-  const onClick = () => {
+
+  const toggleHighlight = () => {
     setHighlightEnabled(!highlightEnabled);
-  
+
     if (!highlightEnabled) {
-      document.onmouseup = document.onkeyup = document.onselectionchange = () => {
-        const selection = document.getSelection()?.toString().trim();
-    
-        if (selection?.length) {
-          const range = document.getSelection()?.getRangeAt(0)
-          const newNode = document.createElement('span');
-          newNode.setAttribute('style', 'background-color: lightblue;');
-          newNode.setAttribute('data-tag', 'Your Tag');
-          newNode.setAttribute('data-summary', 'Your Summary');
-          newNode.addEventListener('click', onHighlightClick);
-          newNode.appendChild(document.createTextNode(selection));
-          range?.deleteContents();
-          range?.insertNode(newNode);
-          setSearchPrompt(selection);  // Updated state here
-        }
-      };
+      document.onmouseup =
+        document.onkeyup =
+        document.onselectionchange =
+          () => {
+            const selection = document.getSelection()?.toString();
+
+            if (selection?.length) {
+              const trimmedSelection = selection.trim();
+              const leadingSpaces = selection.split(trimmedSelection)[0];
+              const trailingSpaces = selection.split(trimmedSelection)[1];
+              const range = document.getSelection()?.getRangeAt(0);
+              const newNode = document.createElement("span");
+
+              newNode.setAttribute("style", "background-color: lightblue;");
+              newNode.setAttribute("data-tag", "Your Tag");
+              newNode.setAttribute("data-summary", "Your Summary");
+              newNode.addEventListener("click", onHighlightClick);
+              newNode.appendChild(document.createTextNode(selection));
+
+              const leadingSpacesNode = document.createTextNode(leadingSpaces);
+              const trailingSpacesNode =
+                document.createTextNode(trailingSpaces);
+
+              range?.deleteContents();
+              range?.insertNode(trailingSpacesNode);
+              range?.insertNode(newNode);
+              range?.insertNode(leadingSpacesNode);
+              setSearchPrompt(selection);
+            }
+          };
     } else {
       document.onmouseup = document.onkeyup = document.onselectionchange = null;
     }
@@ -74,7 +88,7 @@ const SearchBar: React.FC = () => {
       </form>
       <div className="answer">
         <p>{apiResponse}</p>
-        <button onClick={onClick}>Toggle Highlighting</button>
+        <button onClick={toggleHighlight}>Toggle Highlighting</button>
       </div>
     </div>
   );
